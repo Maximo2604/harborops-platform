@@ -1,0 +1,11 @@
+{
+  "marina": "HarborOps Marina",
+  "updated": "2025-01-01",
+  "slips": [
+    { "id": "A1", "length_ft": 30, "available": true, "rate_per_night": 45 },
+    { "id": "A2", "length_ft": 40, "available": false, "rate_per_night": 60 },
+    { "id": "B1", "length_ft": 50, "available": true, "rate_per_night": 75 },
+    { "id": "B2", "length_ft": 60, "available": true, "rate_per_night": 95 },
+    { "id": "C1", "length_ft": 35, "available": false, "rate_per_night": 55 }
+  ]
+}
