@@ -1,20 +1,43 @@
 # ⚓ HarborOps Platform
 
-Marina Slip Management System — Deployed on AWS
+## Project Overview
+HarborOps is a marina slip management platform built and deployed on AWS. This project provisions a full AWS environment using Terraform, serving a branded web application via an EC2 instance behind 
+an Application Load Balancer. The platform exposes endpoints for the homepage, health checks, slip availability data, and instance metadata.
 
 ## Architecture
-- **EC2** — Apache web server serving the HarborOps app
-- **ALB** — Application Load Balancer with health checks
-- **VPC** — Custom VPC with public subnets across 2 AZs
-- **S3** — App file storage and Terraform state backend
-- **GitHub Actions** — CI/CD pipeline on push to main
+![Architecture](docs/architecture.png)
 
-## Deploy
-1. Add GitHub Secrets: AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, S3_BUCKET
-2. Push to main branch
-3. GitHub Actions will run Terraform and deploy
+## Tech Stack
+- **EC2** — Hosts the Apache web server and application files
+- **ALB** — Application Load Balancer routing HTTP traffic to EC2
+- **VPC** — Custom VPC with public subnets across 2 availability zones
+- **S3** — Terraform remote state backend
+- **IAM** — Permissions for deployment
+- **GitHub Actions** — CI/CD pipeline for automated deploys
 
-## App Endpoints
-- / — HarborOps branded homepage
-- /health.html — ALB health check (returns 200)
-- /slips.json — Marina slip availability data
+## Prerequisites
+- Terraform v1.0+
+- AWS CLI configured with valid credentials
+- Git
+- An AWS account with EC2, ALB, VPC, and S3 permissions
+
+## Deployment Steps
+
+## How CI/CD Works
+On every push to the main branch, GitHub Actions runs automatically. It configures AWS credentials using repository secrets, sets up Terraform, runs terraform init and plan to validate the 
+infrastructure, then applies the changes with terraform apply. App files are also synced to S3 on each deploy.
+
+## Live Endpoint
+http://harborops-alb-1174381883.us-east-1.elb.amazonaws.com
+
+## AWS Region
+us-east-1 (N. Virginia)
+
+## GitHub Secrets
+- `AWS_ACCESS_KEY_ID` — AWS credentials for Terraform and CLI access
+- `AWS_SECRET_ACCESS_KEY` — AWS credentials for Terraform and CLI access
+- `S3_BUCKET` — S3 bucket name for app file storage
+
+## Cleanup
+
+Note: Manually delete the S3 buckets after destroy to avoid orphaned resources:
