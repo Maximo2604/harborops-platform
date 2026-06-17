@@ -13,7 +13,7 @@ provider "aws" {
 
 # VPC
 resource "aws_vpc" "main" {
-  cidr_block           = "10.0.0.0/16"
+  cidr_block           = var.vpc_cidr
   enable_dns_hostnames = true
   enable_dns_support   = true
 
@@ -33,6 +33,7 @@ resource "aws_subnet" "public_a" {
   tags = {
     Name    = "${var.project_name}-public-a"
     Project = var.project_name
+    Environment = var.environment
   }
 }
 
@@ -45,6 +46,7 @@ resource "aws_subnet" "public_b" {
   tags = {
     Name    = "${var.project_name}-public-b"
     Project = var.project_name
+    Environment = var.environment
   }
 }
 
@@ -55,6 +57,7 @@ resource "aws_internet_gateway" "main" {
   tags = {
     Name    = "${var.project_name}-igw"
     Project = var.project_name
+    Environment = var.environment
   }
 }
 
@@ -70,6 +73,7 @@ resource "aws_route_table" "public" {
   tags = {
     Name    = "${var.project_name}-public-rt"
     Project = var.project_name
+    Environment = var.environment
   }
 }
 
@@ -147,6 +151,7 @@ resource "aws_instance" "web" {
   tags = {
     Name    = "${var.project_name}-web"
     Project = var.project_name
+    Environment = var.environment
   }
 }
 

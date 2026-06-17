@@ -27,3 +27,14 @@ variable "s3_bucket" {
   type        = string
   default     = "harborops-assets"
 }
+variable "vpc_cidr" {
+  description = "VPC CIDR block"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "environment" {
+  description = "Environment name"
+  type        = string
+  default     = "prod"
+}
