@@ -123,6 +123,8 @@ resource "aws_security_group" "ec2" {
     security_groups = [aws_security_group.alb.id]
 
   }
+
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -225,6 +227,26 @@ resource "aws_instance" "web" {
     Project = var.project_name
     Environment = var.environment
   }
+}
+
+# EBS Volume
+resource "aws_ebs_volume" "marina_data" {
+  availability_zone = "${var.aws_region}a"
+  size              = 10
+  type              = "gp3"
+
+  tags = {
+    Name        = "${var.project_name}-marina-data"
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# Attach EBS to EC2
+resource "aws_volume_attachment" "marina_data" {
+  device_name = "/dev/xvdf"
+  volume_id   = aws_ebs_volume.marina_data.id
+  instance_id = aws_instance.web.id
 }
 
 # ALB

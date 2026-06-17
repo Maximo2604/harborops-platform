@@ -33,6 +33,12 @@ http://harborops-alb-1174381883.us-east-1.elb.amazonaws.com
 ## AWS Region
 us-east-1 (N. Virginia)
 
+## Golden AMI
+- **AMI ID:** ami-04939952b25b7d46e
+- **Created:** 2025-06-17
+- **Base:** Amazon Linux 2023, t3.micro
+- **Includes:** Apache httpd, HarborOps app files, EBS volume mounted at /data/marina
+
 ## GitHub Secrets
 - `AWS_ACCESS_KEY_ID` — AWS credentials for Terraform and CLI access
 - `AWS_SECRET_ACCESS_KEY` — AWS credentials for Terraform and CLI access
