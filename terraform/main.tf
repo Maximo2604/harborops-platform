@@ -121,13 +121,7 @@ resource "aws_security_group" "ec2" {
     to_port         = 80
     protocol        = "tcp"
     security_groups = [aws_security_group.alb.id]
-  }
-  
-  ingress {
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+
   }
   egress {
     from_port   = 0
@@ -180,6 +174,40 @@ resource "aws_iam_role_policy" "ec2_s3_policy" {
 resource "aws_iam_instance_profile" "ec2_profile" {
   name = "${var.project_name}-ec2-profile"
   role = aws_iam_role.ec2_role.name
+}
+
+# Launch Template
+resource "aws_launch_template" "web" {
+  name_prefix   = "${var.project_name}-lt-"
+  image_id      = var.ami_id
+  instance_type = var.instance_type
+  key_name      = "harborops-key"
+
+  iam_instance_profile {
+    name = aws_iam_instance_profile.ec2_profile.name
+  }
+
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [aws_security_group.ec2.id]
+  }
+
+  metadata_options {
+    http_tokens                 = "required"
+    http_endpoint               = "enabled"
+    http_put_response_hop_limit = 1
+  }
+
+  user_data = base64encode(file("../scripts/user_data.sh"))
+
+  tag_specifications {
+    resource_type = "instance"
+    tags = {
+      Name        = "${var.project_name}-web"
+      Project     = var.project_name
+      Environment = var.environment
+    }
+  }
 }
 
 # EC2 Instance

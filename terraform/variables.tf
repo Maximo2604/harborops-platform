@@ -19,7 +19,7 @@ variable "instance_type" {
 variable "ami_id" {
   description = "Amazon Linux 2 AMI ID"
   type        = string
-  default     = "ami-0c02fb55956c7d316"
+  default     = "ami-0521cb2d60cfbb1a6"
 }
 
 variable "s3_bucket" {
