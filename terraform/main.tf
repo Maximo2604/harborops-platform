@@ -139,6 +139,49 @@ resource "aws_security_group" "ec2" {
   tags = { Name = "${var.project_name}-ec2-sg" }
 }
 
+# IAM Role for EC2
+resource "aws_iam_role" "ec2_role" {
+  name = "${var.project_name}-ec2-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
+      Principal = { Service = "ec2.amazonaws.com" }
+    }]
+  })
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# IAM Policy - least privilege S3 access
+resource "aws_iam_role_policy" "ec2_s3_policy" {
+  name = "${var.project_name}-ec2-s3-policy"
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["s3:GetObject", "s3:ListBucket"]
+      Resource = [
+        "arn:aws:s3:::harborops-assets",
+        "arn:aws:s3:::harborops-assets/*"
+      ]
+    }]
+  })
+}
+
+# Instance Profile
+resource "aws_iam_instance_profile" "ec2_profile" {
+  name = "${var.project_name}-ec2-profile"
+  role = aws_iam_role.ec2_role.name
+}
+
 # EC2 Instance
 resource "aws_instance" "web" {
   ami                    = var.ami_id
@@ -146,6 +189,7 @@ resource "aws_instance" "web" {
   subnet_id              = aws_subnet.public_a.id
   vpc_security_group_ids = [aws_security_group.ec2.id]
   key_name               = "harborops-key"
+  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
   user_data              = file("../scripts/user_data.sh")
 
   tags = {
@@ -199,4 +243,65 @@ resource "aws_lb_target_group_attachment" "web" {
   target_group_arn = aws_lb_target_group.web.arn
   target_id        = aws_instance.web.id
   port             = 80
+}
+
+# OIDC Provider for GitHub Actions
+resource "aws_iam_openid_connect_provider" "github" {
+  url = "https://token.actions.githubusercontent.com"
+
+  client_id_list = ["sts.amazonaws.com"]
+
+  thumbprint_list = ["6938fd4d98bab03faadb97b34396831e3780aea1"]
+}
+
+# IAM Role for GitHub Actions
+resource "aws_iam_role" "github_actions" {
+  name = "${var.project_name}-github-actions-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect = "Allow"
+      Principal = {
+        Federated = aws_iam_openid_connect_provider.github.arn
+      }
+      Action = "sts:AssumeRoleWithWebIdentity"
+      Condition = {
+        StringLike = {
+          "token.actions.githubusercontent.com:sub" = "repo:Maximo2604/harborops-platform:*"
+        }
+        StringEquals = {
+          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+        }
+      }
+    }]
+  })
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# GitHub Actions Policy - least privilege
+resource "aws_iam_role_policy" "github_actions_policy" {
+  name = "${var.project_name}-github-actions-policy"
+  role = aws_iam_role.github_actions.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:*",
+          "elasticloadbalancing:*",
+          "iam:*",
+          "s3:*",
+          "vpc:*"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
 }

@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy:
     name: Deploy to AWS
@@ -14,11 +18,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: arn:aws:iam::878598436021:role/harborops-github-actions-role
           aws-region: us-east-1
 
       - name: Setup Terraform
@@ -42,4 +45,4 @@ jobs:
 
       - name: Sync app files to S3
         run: |
-          aws s3 sync app/ s3://${{ secrets.S3_BUCKET }}/app/
+          aws s3 sync app/ s3://harborops-assets/app/
