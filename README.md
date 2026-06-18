@@ -32,7 +32,7 @@ On every push to the main branch, GitHub Actions runs automatically. It configur
 infrastructure, then applies the changes with terraform apply. App files are also synced to S3 on each deploy.
 
 ## Live Endpoint
-http://harborops-alb-1174381883.us-east-1.elb.amazonaws.com
+http://harborops-alb-858816696.us-east-1.elb.amazonaws.com
 
 ## AWS Region
 us-east-1 (N. Virginia)
