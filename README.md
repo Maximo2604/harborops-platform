@@ -43,6 +43,13 @@ us-east-1 (N. Virginia)
 - **Base:** Amazon Linux 2023, t3.micro
 - **Includes:** Apache httpd, HarborOps app files, EBS volume mounted at /data/marina
 
+## Container & Kubernetes
+- **ECR Repository:** 878598436021.dkr.ecr.us-east-1.amazonaws.com/harborops-app:latest
+- **EKS Cluster:** harborops-cluster (us-east-1)
+- **EKS Endpoint:** http://a7d0275535828439390e1ff65feefc77-373084405.us-east-1.elb.amazonaws.com
+- **Replicas:** 2 minimum, 6 maximum
+- **HPA:** CPU target 60%
+
 ## GitHub Secrets
 - `AWS_ACCESS_KEY_ID` — AWS credentials for Terraform and CLI access
 - `AWS_SECRET_ACCESS_KEY` — AWS credentials for Terraform and CLI access
