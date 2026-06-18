@@ -34,6 +34,7 @@ module "compute" {
   vpc_id                    = module.networking.vpc_id
   iam_instance_profile_name = aws_iam_instance_profile.ec2_profile.name
   user_data                 = file("../scripts/user_data.sh")
+  certificate_arn           = aws_acm_certificate_validation.main.certificate_arn
 }
 
 # IAM Role for EC2
@@ -258,4 +259,56 @@ resource "aws_cloudwatch_dashboard" "harborops" {
       }
     ]
   })
+}
+
+# ACM Certificate
+resource "aws_acm_certificate" "main" {
+  domain_name       = "harborops.scoutcloud.dev"
+  validation_method = "DNS"
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Route53 DNS Validation Record
+resource "aws_route53_record" "cert_validation" {
+  for_each = {
+    for dvo in aws_acm_certificate.main.domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  }
+
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = "Z063064143164N44IUDE"
+}
+
+# Certificate Validation
+resource "aws_acm_certificate_validation" "main" {
+  certificate_arn         = aws_acm_certificate.main.arn
+  validation_record_fqdns = [for record in aws_route53_record.cert_validation : record.fqdn]
+}
+
+# Route53 A Record for harborops subdomain
+resource "aws_route53_record" "harborops" {
+  zone_id = "Z063064143164N44IUDE"
+  name    = "harborops.scoutcloud.dev"
+  type    = "A"
+
+  alias {
+    name                   = module.compute.alb_dns_name
+    zone_id                = module.compute.alb_zone_id
+    evaluate_target_health = true
+  }
 }

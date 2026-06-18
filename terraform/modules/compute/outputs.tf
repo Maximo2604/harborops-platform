@@ -22,3 +22,8 @@ output "asg_name" {
   description = "Auto Scaling Group name"
   value       = aws_autoscaling_group.web.name
 }
+
+output "alb_zone_id" {
+  description = "ALB hosted zone ID"
+  value       = aws_lb.main.zone_id
+}
