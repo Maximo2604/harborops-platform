@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   deploy:
-    name: Deploy to AWS
+    name: Sync app files to S3
     runs-on: ubuntu-latest
 
     steps:
@@ -24,25 +24,6 @@ jobs:
           role-to-assume: arn:aws:iam::878598436021:role/harborops-github-actions-role
           aws-region: us-east-1
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-
-      - name: Terraform Init
-        working-directory: terraform
-        run: terraform init
-
-      - name: Terraform Validate
-        working-directory: terraform
-        run: terraform validate
-
-      - name: Terraform Plan
-        working-directory: terraform
-        run: terraform plan
-
-      - name: Terraform Apply
-        working-directory: terraform
-        run: terraform apply -auto-approve
-
       - name: Sync app files to S3
         run: |
-          aws s3 sync app/ s3://harborops-assets/app/
+          aws s3 sync ./app s3://harborops-assets/app/
