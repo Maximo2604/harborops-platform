@@ -12,3 +12,8 @@ output "target_group_arn" {
   description = "Target Group ARN"
   value       = aws_lb_target_group.web.arn
 }
+
+output "asg_name" {
+  description = "Auto Scaling Group name"
+  value       = aws_autoscaling_group.web.name
+}

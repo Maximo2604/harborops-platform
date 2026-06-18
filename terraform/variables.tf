@@ -38,3 +38,15 @@ variable "environment" {
   type        = string
   default     = "prod"
 }
+
+variable "asg_min" {
+  description = "ASG minimum instance count"
+  type        = number
+  default     = 2
+}
+
+variable "asg_max" {
+  description = "ASG maximum instance count"
+  type        = number
+  default     = 6
+}

@@ -21,6 +21,10 @@ an Application Load Balancer. The platform exposes endpoints for the homepage, h
 - Git
 - An AWS account with EC2, ALB, VPC, and S3 permissions
 
+## Bootstrap (run once before terraform init)
+The S3 bucket for remote state must exist before running terraform init.
+Create it manually:
+
 ## Deployment Steps
 
 ## How CI/CD Works

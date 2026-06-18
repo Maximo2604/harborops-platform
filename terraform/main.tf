@@ -274,8 +274,8 @@ resource "aws_lb_listener" "http" {
 # Auto Scaling Group
 resource "aws_autoscaling_group" "web" {
   name                = "${var.project_name}-asg"
-  min_size            = 2
-  max_size            = 6
+  min_size            = var.asg_min
+  max_size            = var.asg_max
   desired_capacity    = 2
   vpc_zone_identifier = [aws_subnet.public_a.id, aws_subnet.public_b.id]
   target_group_arns   = [aws_lb_target_group.web.arn]
