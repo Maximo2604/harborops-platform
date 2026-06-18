@@ -381,3 +381,115 @@ resource "aws_iam_role_policy" "github_actions_policy" {
     ]
   })
 }
+
+# CloudWatch Log Group
+resource "aws_cloudwatch_log_group" "apache_access" {
+  name              = "/harborops/apache/access"
+  retention_in_days = 7
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# SNS Topic for Alarms
+resource "aws_sns_topic" "harborops_alerts" {
+  name = "${var.project_name}-alerts"
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# CloudWatch Alarm - UnHealthyHostCount
+resource "aws_cloudwatch_metric_alarm" "unhealthy_hosts" {
+  alarm_name          = "${var.project_name}-unhealthy-hosts"
+  comparison_operator = "GreaterThanThreshold"
+  evaluation_periods  = 1
+  metric_name         = "UnHealthyHostCount"
+  namespace           = "AWS/ApplicationELB"
+  period              = 60
+  statistic           = "Average"
+  threshold           = 0
+  alarm_description   = "Alert when any target is unhealthy"
+  alarm_actions       = [aws_sns_topic.harborops_alerts.arn]
+
+  dimensions = {
+    LoadBalancer = aws_lb.main.arn_suffix
+    TargetGroup  = aws_lb_target_group.web.arn_suffix
+  }
+
+  tags = {
+    Project     = var.project_name
+    Environment = var.environment
+  }
+}
+
+# CloudWatch Dashboard
+resource "aws_cloudwatch_dashboard" "harborops" {
+  dashboard_name = "harborops-dashboard"
+
+  dashboard_body = jsonencode({
+    widgets = [
+      {
+        type   = "metric"
+        x      = 0
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          title  = "ALB Request Count"
+          region = "us-east-1"
+          period = 300
+          stat   = "Sum"
+          view   = "timeSeries"
+          metrics = [
+            ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", aws_lb.main.arn_suffix]
+          ]
+        }
+      },
+      {
+        type   = "metric"
+        x      = 12
+        y      = 0
+        width  = 12
+        height = 6
+        properties = {
+          title  = "ASG In-Service Instances"
+          region = "us-east-1"
+          period = 300
+          stat   = "Average"
+          view   = "timeSeries"
+          metrics = [
+            ["AWS/AutoScaling", "GroupInServiceInstances", "AutoScalingGroupName", aws_autoscaling_group.web.name]
+          ]
+        }
+      }
+    ]
+  })
+}
+
+# IAM Policy for CloudWatch Agent
+resource "aws_iam_role_policy" "ec2_cloudwatch_policy" {
+  name = "${var.project_name}-ec2-cloudwatch-policy"
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "cloudwatch:PutMetricData",
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
