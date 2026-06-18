@@ -371,6 +371,7 @@ resource "aws_iam_role_policy" "github_actions_policy" {
         Action = [
           "ec2:*",
           "elasticloadbalancing:*",
+          "autoscaling:*",
           "iam:*",
           "s3:*",
           "vpc:*"
