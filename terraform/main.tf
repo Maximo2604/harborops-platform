@@ -213,21 +213,7 @@ resource "aws_launch_template" "web" {
 }
 
 # EC2 Instance
-resource "aws_instance" "web" {
-  ami                    = var.ami_id
-  instance_type          = var.instance_type
-  subnet_id              = aws_subnet.public_a.id
-  vpc_security_group_ids = [aws_security_group.ec2.id]
-  key_name               = "harborops-key"
-  iam_instance_profile   = aws_iam_instance_profile.ec2_profile.name
-  user_data              = file("../scripts/user_data.sh")
 
-  tags = {
-    Name    = "${var.project_name}-web"
-    Project = var.project_name
-    Environment = var.environment
-  }
-}
 
 # EBS Volume
 resource "aws_ebs_volume" "marina_data" {
@@ -242,12 +228,7 @@ resource "aws_ebs_volume" "marina_data" {
   }
 }
 
-# Attach EBS to EC2
-resource "aws_volume_attachment" "marina_data" {
-  device_name = "/dev/xvdf"
-  volume_id   = aws_ebs_volume.marina_data.id
-  instance_id = aws_instance.web.id
-}
+
 
 # ALB
 resource "aws_lb" "main" {
@@ -288,11 +269,55 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# Target Group Attachment
-resource "aws_lb_target_group_attachment" "web" {
-  target_group_arn = aws_lb_target_group.web.arn
-  target_id        = aws_instance.web.id
-  port             = 80
+
+
+# Auto Scaling Group
+resource "aws_autoscaling_group" "web" {
+  name                = "${var.project_name}-asg"
+  min_size            = 2
+  max_size            = 6
+  desired_capacity    = 2
+  vpc_zone_identifier = [aws_subnet.public_a.id, aws_subnet.public_b.id]
+  target_group_arns   = [aws_lb_target_group.web.arn]
+  health_check_type   = "ELB"
+  health_check_grace_period = 120
+
+  launch_template {
+    id      = aws_launch_template.web.id
+    version = "$Latest"
+  }
+
+  tag {
+    key                 = "Name"
+    value               = "${var.project_name}-asg-instance"
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Project"
+    value               = var.project_name
+    propagate_at_launch = true
+  }
+
+  tag {
+    key                 = "Environment"
+    value               = var.environment
+    propagate_at_launch = true
+  }
+}
+
+# Target Tracking Scaling Policy
+resource "aws_autoscaling_policy" "cpu_tracking" {
+  name                   = "${var.project_name}-cpu-tracking"
+  autoscaling_group_name = aws_autoscaling_group.web.name
+  policy_type            = "TargetTrackingScaling"
+
+  target_tracking_configuration {
+    predefined_metric_specification {
+      predefined_metric_type = "ASGAverageCPUUtilization"
+    }
+    target_value = 60.0
+  }
 }
 
 # OIDC Provider for GitHub Actions
