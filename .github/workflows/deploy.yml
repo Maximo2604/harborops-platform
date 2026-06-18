@@ -10,9 +10,25 @@ permissions:
   contents: read
 
 jobs:
+  lint:
+    name: Terraform Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Format Check
+        run: terraform fmt -check -recursive
+        working-directory: terraform
+
   deploy:
     name: Sync app files to S3
     runs-on: ubuntu-latest
+    needs: lint
 
     steps:
       - name: Checkout code
@@ -25,5 +41,4 @@ jobs:
           aws-region: us-east-1
 
       - name: Sync app files to S3
-        run: |
-          aws s3 sync ./app s3://harborops-assets/app/
+        run: aws s3 sync ./app s3://harborops-assets/app/

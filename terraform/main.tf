@@ -64,8 +64,8 @@ resource "aws_iam_role_policy" "ec2_s3_policy" {
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Effect   = "Allow"
-      Action   = ["s3:GetObject", "s3:ListBucket"]
+      Effect = "Allow"
+      Action = ["s3:GetObject", "s3:ListBucket"]
       Resource = [
         "arn:aws:s3:::harborops-assets",
         "arn:aws:s3:::harborops-assets/*"
@@ -230,11 +230,11 @@ resource "aws_cloudwatch_dashboard" "harborops" {
         width  = 12
         height = 6
         properties = {
-          title   = "ALB Request Count"
-          region  = var.aws_region
-          period  = 300
-          stat    = "Sum"
-          view    = "timeSeries"
+          title  = "ALB Request Count"
+          region = var.aws_region
+          period = 300
+          stat   = "Sum"
+          view   = "timeSeries"
           metrics = [
             ["AWS/ApplicationELB", "RequestCount", "LoadBalancer", module.compute.alb_arn_suffix]
           ]
@@ -247,11 +247,11 @@ resource "aws_cloudwatch_dashboard" "harborops" {
         width  = 12
         height = 6
         properties = {
-          title   = "ASG In-Service Instances"
-          region  = var.aws_region
-          period  = 300
-          stat    = "Average"
-          view    = "timeSeries"
+          title  = "ASG In-Service Instances"
+          region = var.aws_region
+          period = 300
+          stat   = "Average"
+          view   = "timeSeries"
           metrics = [
             ["AWS/AutoScaling", "GroupInServiceInstances", "AutoScalingGroupName", module.compute.asg_name]
           ]
